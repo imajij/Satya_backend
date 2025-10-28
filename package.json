@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/imajij/Satya_backend/issues"
   },
-  "homepage": "https://github.com/imajij/Satya_backend#readme"
+  "homepage": "https://github.com/imajij/Satya_backend#readme",
+  "dependencies": {
+    "ioredis": "^5.3.2",
+    "cheerio": "^1.0.0-rc.12"
+  }
 }
