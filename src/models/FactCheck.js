@@ -10,7 +10,7 @@ const factCheckSchema = new mongoose.Schema({
     enum: ["true", "false", "misleading"],
     required: true
   },
-  source: {
+  publisher: {
     type: String,
     required: true
   },

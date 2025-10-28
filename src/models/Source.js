@@ -6,12 +6,12 @@ const sourceSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  domain: {
+  url: {
     type: String,
     required: true,
     unique: true
   },
-  reputation_score: {
+  factual: {
     type: Number,
     min: 0,
     max: 100,

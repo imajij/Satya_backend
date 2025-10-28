@@ -5,7 +5,7 @@ const articleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  source: {
+  publisher: {
     type: String,
     required: true
   },
@@ -17,7 +17,7 @@ const articleSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  reputation_score: {
+  factual: {
     type: Number,
     min: 0,
     max: 100
