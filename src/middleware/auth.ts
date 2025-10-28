@@ -1,9 +1,15 @@
-import { ClerkExpressRequireAuth, clerkMiddleware } from "@clerk/express";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
 import type { Request } from "express";
-import type { RequireAuthProp } from "@clerk/express";
 
 export const clerkAuthMiddleware = clerkMiddleware();
+export const requireClerkAuth = requireAuth();
 
-export const requireClerkAuth = ClerkExpressRequireAuth();
+export interface AuthObject {
+  userId: string;
+  sessionId: string;
+  actor?: Record<string, unknown> | null;
+  claims?: Record<string, unknown> | null;
+  getToken: (options?: { template?: string }) => Promise<string | null>;
+}
 
-export type AuthenticatedRequest = RequireAuthProp<Request>;
+export type AuthenticatedRequest = Request & { auth: AuthObject };

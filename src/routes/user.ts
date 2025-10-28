@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { clerkClient } from "@clerk/express";
 import { requireClerkAuth, type AuthenticatedRequest } from "../middleware/auth.js";
 
@@ -8,8 +8,9 @@ const userRouter = Router();
 userRouter.get(
   "/me",
   requireClerkAuth,
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { userId } = req.auth;
+  async (req: Request, res: Response) => {
+    const { auth } = req as AuthenticatedRequest;
+    const { userId } = auth;
 
     if (!userId) {
       return res.status(401).json({ error: "unauthenticated" });
@@ -25,7 +26,8 @@ userRouter.get(
           firstName: user.firstName,
           lastName: user.lastName,
           imageUrl: user.imageUrl,
-          createdAt: user.createdAt
+          createdAt: user.createdAt,
+          sessionId: auth.sessionId
         }
       });
     } catch (error) {
