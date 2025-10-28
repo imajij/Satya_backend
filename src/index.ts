@@ -1,18 +1,28 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from src directory
+dotenv.config({ path: path.join(__dirname, ".env") });
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import connectDB from "./config/database.js";
 import feedRouter from "./routes/feed.js";
 import verifyRouter from "./routes/verify.js";
 import userRouter from "./routes/user.js";
 import { clerkAuthMiddleware } from "./middleware/auth.js";
 
-if (!process.env.CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
-  throw new Error(
-    "Missing Clerk environment variables. Ensure CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY are configured."
-  );
-}
+// Temporarily commented out for testing - uncomment when you have Clerk keys
+// if (!process.env.CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+//   throw new Error(
+//     "Missing Clerk environment variables. Ensure CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY are configured."
+//   );
+// }
 
 const app = express();
 
@@ -54,7 +64,20 @@ app.use(
 );
 
 const port = Number(process.env.PORT ?? 4000);
-app.listen(port, () => {
-  // eslint-disable-next-line no-console
-  console.log(`✅ Satya backend listening on port ${port}`);
-});
+
+// Connect to MongoDB before starting the server
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    app.listen(port, () => {
+      // eslint-disable-next-line no-console
+      console.log(`✅ Satya backend listening on port ${port}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
