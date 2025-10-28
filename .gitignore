@@ -12,6 +12,8 @@ pnpm-debug.log*
 .env.local
 .env.*.local
 
+articles/
+
 # Build outputs
 dist/
 build/
