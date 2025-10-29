@@ -1,33 +1,21 @@
 {
-  "name": "satya-backend",
-  "version": "0.1.0",
-  "private": true,
+  "name": "satya-monorepo",
+  "version": "1.0.0",
+  "description": "Unified Satya news verification platform - Backend, Pipeline, and News Scraper in one",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc && cp -r src/models dist/ && cp -r src/migrations dist/",
-    "start": "node dist/index.js",
-    "migrate": "node --loader ts-node/esm src/migrations/migrate.js",
-    "seed": "node --loader ts-node/esm src/migrations/migrate.js"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "install-all": "npm install && cd services/backend && npm install && cd ../pipeline && npm install && cd ../scraper && npm install",
+    "build": "cd services/backend && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
-    "@clerk/express": "^1.1.5",
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-  "axios": "^1.4.0",
-    "express": "^4.19.2",
-    "helmet": "^7.1.0",
-    "mongoose": "^8.19.2",
-    "zod": "^3.23.8"
+    "dotenv": "^16.3.1"
   },
-  "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/mongoose": "^5.11.96",
-    "@types/node": "^20.12.12",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "tsx": "^4.20.6",
-    "typescript": "^5.4.5"
-  }
+  "author": "",
+  "license": "ISC"
 }

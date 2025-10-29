@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Processed articles (generated output)
+processed/
+*.processed.json
+
+# Test files (keep test scripts, remove test outputs)
+test-report-*.txt
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+server.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional: Uncomment if you want to ignore sample articles
+# articles/*.json
+# !articles/sample_*.json

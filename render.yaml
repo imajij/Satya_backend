@@ -1,0 +1,63 @@
+services:
+  # Unified Backend Services (News Scraper + Pipeline + Backend API)
+  - type: web
+    name: satya-backend-services
+    runtime: node
+    repo: https://github.com/imajij/Satya_backend  # Update with your repo URL
+    rootDir: satya-monorepo
+    buildCommand: npm run install-all && npm run build
+    startCommand: npm start
+    envVars:
+      # MongoDB
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB
+        value: satya
+      
+      # Service Ports
+      - key: SCRAPER_PORT
+        value: 5000
+      - key: PIPELINE_PORT
+        value: 3000
+      - key: BACKEND_PORT
+        value: 4000
+      
+      # Inter-service URLs (localhost since all in same container)
+      - key: NEWS_SCRAPER_URL
+        value: http://localhost:5000
+      - key: PIPELINE_URL
+        value: http://localhost:3000
+      
+      # API Keys
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_FACTCHECK_API_KEY
+        sync: false
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      
+      # Clerk Auth
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      
+      # Pipeline Config
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: BIAS_PENALTY_FACTOR
+        value: 0.5
+      - key: DEFAULT_PUBLISHER_FACTUALITY
+        value: 0.726642
+      - key: FUZZY_MATCH_THRESHOLD
+        value: 0.7
+      - key: APP_MOTTO
+        value: Trustworthy news and viral message filter
+      
+      # Scraper Config
+      - key: SCRAPE_TIMEOUT_MS
+        value: 10000
+      - key: USER_AGENT
+        value: NewsScraperBot/1.0
+      - key: NODE_ENV
+        value: production
