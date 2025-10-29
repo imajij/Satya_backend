@@ -5,31 +5,31 @@ import FactCheck from "../models/FactCheck.js";
 const seedSources = async () => {
   const sources = [
     {
-      name: "BBC News",
+      publisher: "BBC News",
       url: "bbc.com",
       factual: 85,
       bias: "neutral"
     },
     {
-      name: "CNN",
+      publisher: "CNN",
       url: "cnn.com",
       factual: 75,
       bias: "left"
     },
     {
-      name: "Fox News",
+      publisher: "Fox News",
       url: "foxnews.com",
       factual: 70,
       bias: "right"
     },
     {
-      name: "Reuters",
+      publisher: "Reuters",
       url: "reuters.com",
       factual: 90,
       bias: "neutral"
     },
     {
-      name: "Associated Press",
+      publisher: "Associated Press",
       url: "apnews.com",
       factual: 88,
       bias: "neutral"
@@ -51,14 +51,16 @@ const seedSources = async () => {
 };
 
 const seedArticles = async () => {
-  const articles = [
+    const articles = [
     {
       headline: "Global Climate Summit Reaches Historic Agreement",
       publisher: "Reuters",
       summary: "World leaders agree on ambitious climate targets for 2030",
       factual: 90,
       bias: "neutral",
-      fact_check_status: "verified"
+      classification: "verified",
+      url: "https://reuters.example/1",
+      content: "Full article text placeholder."
     },
     {
       headline: "Tech Industry Sees Major Breakthrough in AI Development",
@@ -66,7 +68,9 @@ const seedArticles = async () => {
       summary: "New AI model shows unprecedented capabilities in natural language processing",
       factual: 85,
       bias: "neutral",
-      fact_check_status: "verified"
+      classification: "verified",
+      url: "https://bbc.example/1",
+      content: "Full article text placeholder."
     },
     {
       headline: "Economic Markets Show Strong Recovery Signs",
@@ -74,7 +78,9 @@ const seedArticles = async () => {
       summary: "Stock markets reach new highs as economic indicators improve",
       factual: 88,
       bias: "neutral",
-      fact_check_status: "unverified"
+      classification: "unverified",
+      url: "https://apnews.example/1",
+      content: "Full article text placeholder."
     }
   ];
 

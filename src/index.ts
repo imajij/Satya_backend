@@ -5,8 +5,8 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from src directory
-dotenv.config({ path: path.join(__dirname, ".env") });
+// Load .env (prefer project root .env). Using plain dotenv.config() loads from process.cwd().
+dotenv.config();
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";

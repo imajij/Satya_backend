@@ -9,7 +9,12 @@ const articleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  summary: {
+  url: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  content: {
     type: String,
     required: true
   },
@@ -18,6 +23,7 @@ const articleSchema = new mongoose.Schema({
     default: Date.now
   },
   factual: {
+    // publisher factual baseline or computed factuality (0-100)
     type: Number,
     min: 0,
     max: 100
@@ -27,10 +33,31 @@ const articleSchema = new mongoose.Schema({
     enum: ["left", "right", "neutral"],
     default: "neutral"
   },
-  fact_check_status: {
+  classification: {
+    // per-article classification: verified, unverified, false, misleading
     type: String,
     enum: ["verified", "unverified", "false", "misleading"],
     default: "unverified"
+  },
+  claims: {
+    // extracted claims from the article
+    type: [mongoose.Schema.Types.Mixed],
+    default: []
+  },
+  fact_check_results: {
+    // fact-check results from external APIs
+    type: [mongoose.Schema.Types.Mixed],
+    default: []
+  },
+  bias_analysis: {
+    // detailed bias analysis from pipeline
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  mbfc_publisher_match: {
+    // MBFC publisher data if matched
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 }, {
   timestamps: true

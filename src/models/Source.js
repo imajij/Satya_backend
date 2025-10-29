@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const sourceSchema = new mongoose.Schema({
-  name: {
+  publisher: {
     type: String,
     required: true,
     unique: true
@@ -12,6 +12,7 @@ const sourceSchema = new mongoose.Schema({
     unique: true
   },
   factual: {
+    // stored as 0-100 to match existing seed/uploader behavior
     type: Number,
     min: 0,
     max: 100,
@@ -26,4 +27,5 @@ const sourceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-export default mongoose.model("Source", sourceSchema);
+// Export model using the exact collection name 'media_bias_publishers'
+export default mongoose.model('MediaBiasPublisher', sourceSchema, 'media_bias_publishers');
