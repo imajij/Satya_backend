@@ -30,8 +30,28 @@ feedRouter.get("/", requireClerkAuth, async (req: Request, res: Response) => {
     const items = docs.map((d: any) => {
       // Only fetch from Source collection if Article doesn't already have mbfc_publisher_match
       if (!d.mbfc_publisher_match) {
-        const meta = publisherMap.get((d.publisher || "").toLowerCase()) || null;
-        return { ...d, mbfc_publisher_match: meta };
+        const publisherName = (d.publisher || "").toLowerCase();
+        
+        // Try exact match first
+        let meta = publisherMap.get(publisherName);
+        
+        // If no exact match, try finding by domain/URL similarity
+        if (!meta && publisherName) {
+          // Check if publisher name looks like a domain (contains .)
+          if (publisherName.includes('.')) {
+            // Try to match against Source URLs
+            for (const [key, pub] of publisherMap.entries()) {
+              const pubUrl = (pub.url || '').toLowerCase();
+              // Check if domain appears in MBFC URL
+              if (pubUrl.includes(publisherName) || publisherName.includes(key)) {
+                meta = pub;
+                break;
+              }
+            }
+          }
+        }
+        
+        return { ...d, mbfc_publisher_match: meta || null };
       }
       // Article already has mbfc_publisher_match from pipeline, keep it
       return d;
@@ -56,7 +76,26 @@ feedRouter.get("/:id", requireClerkAuth, async (req: Request, res: Response) => 
     // Try to find matching publisher metadata
     const publishers = await Source.find({}).lean();
     const publisherMap = new Map(publishers.map((p: any) => [p.publisher.toLowerCase(), p]));
-    const meta = publisherMap.get((article.publisher || "").toLowerCase()) || null;
+    const publisherName = (article.publisher || "").toLowerCase();
+    
+    // Try exact match first
+    let meta = publisherMap.get(publisherName);
+    
+    // If no exact match, try finding by domain/URL similarity
+    if (!meta && publisherName) {
+      // Check if publisher name looks like a domain (contains .)
+      if (publisherName.includes('.')) {
+        // Try to match against Source URLs
+        for (const [key, pub] of publisherMap.entries()) {
+          const pubUrl = (pub.url || '').toLowerCase();
+          // Check if domain appears in MBFC URL
+          if (pubUrl.includes(publisherName) || publisherName.includes(key)) {
+            meta = pub;
+            break;
+          }
+        }
+      }
+    }
     
     // Merge publisher metadata if not already present
     if (meta && !article.mbfc_publisher_match) {

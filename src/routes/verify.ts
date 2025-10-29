@@ -16,39 +16,32 @@ const PIPELINE_URL = process.env.PIPELINE_URL || "http://localhost:3000";
 verifyRouter.post("/", requireClerkAuth, async (req: Request, res: Response) => {
   const { url, article } = req.body || {};
 
-  let articleObj = article;
-
   try {
-    if (!articleObj) {
-      if (!url) return res.status(400).json({ error: "Provide article object or url to verify" });
-      // Try to fetch the URL and extract title/content (basic fallback)
-      try {
-        const r = await axios.get(url, { timeout: 8000 });
-        const html = r.data as string;
-        const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-        const title = titleMatch ? titleMatch[1].trim() : url;
-        // extract first two <p> tags as content fallback
-        const pMatches = Array.from(html.matchAll(/<p>(.*?)<\/p>/gi)).slice(0, 4).map(m => m[1].replace(/<[^>]+>/g, '').trim()).filter(Boolean);
-        const content = pMatches.join('\n\n') || '';
-        articleObj = { publisher: new URL(url).hostname.replace('www.',''), title, content, url };
-      } catch (err) {
-        // cannot scrape
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        return res.status(502).json({ error: 'Failed to fetch url for scraping', details: errorMessage });
-      }
+    // Pipeline now handles scraping via News Scraper service
+    // Just forward the URL or article object to Pipeline
+    if (!article && !url) {
+      return res.status(400).json({ error: "Provide article object or url to verify" });
     }
 
-    // Normalize fields to pipeline expected shape
-    const pipelineArticle = {
-      publisher: articleObj.publisher || articleObj.publisherName || '' ,
-      title: articleObj.headline || articleObj.title || articleObj.headline,
-      content: articleObj.content || '',
-      url: articleObj.url || url || ''
-    };
+    // Prepare payload for Pipeline
+    const pipelinePayload: any = {};
+    
+    if (url) {
+      // Just pass the URL - Pipeline will call News Scraper
+      pipelinePayload.url = url;
+    } else if (article) {
+      // Normalize fields to pipeline expected shape
+      pipelinePayload.article = {
+        publisher: article.publisher || article.publisherName || '',
+        title: article.headline || article.title,
+        content: article.content || '',
+        url: article.url || ''
+      };
+    }
 
-    // Call external pipeline if available
+    // Call external pipeline
     try {
-      const resp = await axios.post(`${PIPELINE_URL}/api/verify`, { article: pipelineArticle }, { timeout: 15000 });
+      const resp = await axios.post(`${PIPELINE_URL}/api/verify`, pipelinePayload, { timeout: 15000 });
       const data = resp.data || {};
       
       // Pipeline returns jobId for async processing
@@ -83,12 +76,25 @@ verifyRouter.post("/", requireClerkAuth, async (req: Request, res: Response) => 
         }
       }
 
+      // Extract article info from processed result or use original payload
+      const articleInfo = processed.publisher && processed.title ? {
+        title: processed.title,
+        publisher: processed.publisher,
+        content: processed.content || '',
+        url: processed.url || url || ''
+      } : (pipelinePayload.article || { 
+        title: 'Article', 
+        publisher: url ? new URL(url).hostname : 'Unknown',
+        content: '',
+        url: url || ''
+      });
+
       // Map processed to Article model fields when available
       const doc = {
-        headline: pipelineArticle.title,
-        publisher: pipelineArticle.publisher,
-        content: pipelineArticle.content,
-        url: pipelineArticle.url,
+        headline: articleInfo.title,
+        publisher: articleInfo.publisher,
+        content: articleInfo.content,
+        url: articleInfo.url,
         classification: processed.classification || 'unverified',
         factual: processed.credibilityScore ? Math.round((processed.credibilityScore || 0) * 100) : undefined,
         bias: typeof processed.articleBiasScore === 'number' 
@@ -119,29 +125,14 @@ verifyRouter.post("/", requireClerkAuth, async (req: Request, res: Response) => 
         saved: true 
       });
     } catch (err) {
-      // pipeline call failed — fallback to saving minimal article
-      const doc = {
-        headline: pipelineArticle.title,
-        publisher: pipelineArticle.publisher,
-        content: pipelineArticle.content,
-        url: pipelineArticle.url,
-        classification: 'unverified'
-      };
-      let savedArticle;
-      try { 
-        savedArticle = await Article.findOneAndUpdate(
-          { url: doc.url }, 
-          { $set: doc }, 
-          { upsert: true, new: true }
-        ); 
-      } catch(e: any) {
-        console.warn('Fallback article save failed:', e?.message || e);
-      }
-      return res.status(200).json({ 
-        data: savedArticle || doc,
-        pipeline: null, 
-        saved: true, 
-        note: 'Pipeline unavailable; saved basic article for manual processing' 
+      // pipeline call failed — return error (Pipeline should handle scraping)
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('Pipeline call failed:', errorMessage);
+      
+      return res.status(502).json({ 
+        error: 'Verification service unavailable',
+        details: errorMessage,
+        note: 'The article verification service is currently unavailable. Please try again later.'
       });
     }
   } catch (error: any) {
