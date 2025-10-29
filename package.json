@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && cp -r src/models dist/ && cp -r src/migrations dist/",
     "start": "node dist/index.js",
     "migrate": "node --loader ts-node/esm src/migrations/migrate.js",
     "seed": "node --loader ts-node/esm src/migrations/migrate.js"
