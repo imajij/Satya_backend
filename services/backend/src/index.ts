@@ -40,6 +40,16 @@ app.get("/health", (req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Debug endpoint to check environment variables (remove after debugging)
+app.get("/debug/env", (req: Request, res: Response) => {
+  res.json({
+    FRONTEND_URL: process.env.FRONTEND_URL,
+    BACKEND_URL: process.env.BACKEND_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
+  });
+});
+
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/feed", feedRouter);
