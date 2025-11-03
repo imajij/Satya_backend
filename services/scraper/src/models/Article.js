@@ -43,16 +43,15 @@ const articleSchema = new mongoose.Schema({
   },
   scrapedAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   }
 }, {
   timestamps: true,
   collection: 'articles'
 });
 
-// Indexes
-articleSchema.index({ url: 1 }, { unique: true });
+// Note: url index defined inline with unique:true, scrapedAt without duplicate index
+// Only publisher index needs separate declaration
 articleSchema.index({ publisher: 1 });
 
 /**

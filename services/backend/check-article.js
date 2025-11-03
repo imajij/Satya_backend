@@ -1,7 +1,31 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import Article from './src/models/Article.js';
 
-const MONGO_URI = 'mongodb+srv://satya:7WhUBPmXdJ1L24Mb@satya0.1wzg9zg.mongodb.net/?appName=satya0';
+dotenv.config();
+
+const appendDbToUri = (uri, dbName) => {
+  if (!uri) return '';
+  const normalised = uri.replace(/^mongodb(\+srv)?:\/\//, '');
+  const hasDbPath = /\/[^\/\?]+/.test(normalised);
+  if (hasDbPath || !dbName) return uri;
+
+  const trimmed = uri.replace(/\/*$/, '');
+  const queryIndex = trimmed.indexOf('?');
+  if (queryIndex === -1) return `${trimmed}/${dbName}`;
+  const base = trimmed.slice(0, queryIndex).replace(/\/*$/, '');
+  const query = trimmed.slice(queryIndex);
+  return `${base}/${dbName}${query}`;
+};
+
+const rawUri = process.env.MONGO_URI;
+const dbName = process.env.MONGO_DB || 'satya';
+const MONGO_URI = appendDbToUri(rawUri, dbName);
+
+if (!MONGO_URI) {
+  console.error('Mongo connection string is not configured. Set MONGO_URI (and optionally MONGO_DB).');
+  process.exit(1);
+}
 
 mongoose.connect(MONGO_URI).then(async () => {
   

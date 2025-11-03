@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import axios from "axios";
-import { requireClerkAuth } from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
 // @ts-ignore - Article is a JS file
 import Article from "../models/Article.js";
 // @ts-ignore - Source is a JS file
@@ -13,7 +13,7 @@ const PIPELINE_URL = process.env.PIPELINE_URL || "http://localhost:3000";
 
 // POST /verify
 // body: { url?: string, article?: { publisher, headline, content, url } }
-verifyRouter.post("/", requireClerkAuth, async (req: Request, res: Response) => {
+verifyRouter.post("/", requireAuth, async (req: Request, res: Response) => {
   const { url, article } = req.body || {};
 
   try {

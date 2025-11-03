@@ -4,12 +4,13 @@ import type { Request, Response } from "express";
 import Article from "../models/Article.js";
 // @ts-ignore - Source is a JS file
 import Source from "../models/Source.js";
-import { requireClerkAuth } from "../middleware/auth.js";
+import { optionalAuth } from "../middleware/auth.js";
 import type { NewsCategory } from "../types/news.js";
 
 const feedRouter = Router();
 
-feedRouter.get("/", requireClerkAuth, async (req: Request, res: Response) => {
+// Use optionalAuth so both authenticated and unauthenticated users can access
+feedRouter.get("/", optionalAuth, async (req: Request, res: Response) => {
   try {
     const page = parseInt((req.query.page as string) || "1", 10);
     const limit = parseInt((req.query.limit as string) || "6", 10);
@@ -63,8 +64,8 @@ feedRouter.get("/", requireClerkAuth, async (req: Request, res: Response) => {
   }
 });
 
-// GET /feed/:id - Get article by ID
-feedRouter.get("/:id", requireClerkAuth, async (req: Request, res: Response) => {
+// GET /feed/:id - Get article by ID (public access)
+feedRouter.get("/:id", optionalAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
