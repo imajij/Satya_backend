@@ -7,6 +7,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = dirname(__dirname);
 
+console.log('=== Prepare Services Debug ===');
+console.log('Script location:', __filename);
+console.log('Root directory:', rootDir);
+console.log('===============================\n');
+
 const services = [
   {
     name: 'backend',
@@ -50,17 +55,28 @@ const ensureInstall = (service) => {
       args.push('--include=dev');
     }
     console.log(`Installing dependencies for ${service.name}...`);
+    console.log(`  Working directory: ${service.path}`);
     run('npm', args, service.path, { ...process.env, npm_config_loglevel: 'error' });
   }
 
   for (const pkg of service.requiredPackages) {
     const pkgPath = join(modulesPath, pkg, 'package.json');
+    console.log(`  Checking ${pkg} at: ${pkgPath}`);
     if (!existsSync(pkgPath)) {
-      console.log(`${pkg} missing for ${service.name}, installing directly...`);
-      run('npm', ['install', pkg], service.path, { ...process.env, npm_config_loglevel: 'error' });
+      console.log(`  ${pkg} missing for ${service.name}, installing directly...`);
+      run('npm', ['install', pkg, '--save'], service.path, { ...process.env, npm_config_loglevel: 'error' });
+      
+      // Re-check after install
       if (!existsSync(pkgPath)) {
-        throw new Error(`Missing required package '${pkg}' for ${service.name} even after install at ${pkgPath}`);
+        console.error(`  ERROR: Still cannot find ${pkgPath}`);
+        console.error(`  node_modules exists: ${existsSync(modulesPath)}`);
+        console.error(`  ${pkg} folder exists: ${existsSync(join(modulesPath, pkg))}`);
+        throw new Error(`Missing required package '${pkg}' for ${service.name} even after install`);
+      } else {
+        console.log(`  ✓ ${pkg} installed successfully`);
       }
+    } else {
+      console.log(`  ✓ ${pkg} already present`);
     }
   }
 };

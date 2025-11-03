@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Old nested structure (removed)
+news-scraper-api/
+
 # Environment variables
 .env
 
