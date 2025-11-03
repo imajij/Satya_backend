@@ -10,6 +10,9 @@ const __dirname = dirname(__filename);
 // Load environment variables
 dotenv.config();
 
+// Ensure service dependencies are installed/built before starting
+await import('./scripts/prepare-services.js');
+
 const services = [
   {
     name: 'News Scraper',
