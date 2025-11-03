@@ -5,6 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "prestart": "node scripts/prepare-services.js",
+    "prepare-services": "node scripts/prepare-services.js",
     "start": "node index.js",
     "dev": "node index.js",
     "install-all": "npm install && cd services/backend && npm install && cd ../pipeline && npm install && cd ../scraper && npm install",
