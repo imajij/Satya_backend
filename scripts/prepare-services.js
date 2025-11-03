@@ -52,6 +52,17 @@ const ensureInstall = (service) => {
     console.log(`Installing dependencies for ${service.name}...`);
     run('npm', args, service.path, { ...process.env, npm_config_loglevel: 'error' });
   }
+
+  for (const pkg of service.requiredPackages) {
+    const pkgPath = join(modulesPath, pkg, 'package.json');
+    if (!existsSync(pkgPath)) {
+      console.log(`${pkg} missing for ${service.name}, installing directly...`);
+      run('npm', ['install', pkg], service.path, { ...process.env, npm_config_loglevel: 'error' });
+      if (!existsSync(pkgPath)) {
+        throw new Error(`Missing required package '${pkg}' for ${service.name} even after install at ${pkgPath}`);
+      }
+    }
+  }
 };
 
 const ensureBuild = (service) => {
