@@ -9,7 +9,7 @@ news-scraper-api/
 
 # Scraped data storage
 data/
-*.json
+data/**/*.json
 
 # Logs
 *.log
