@@ -3,11 +3,13 @@ services:
   - type: web
     name: satya-backend-services
     runtime: node
-    repo: https://github.com/imajij/Satya_backend  # Update with your repo URL
-    rootDir: satya-monorepo
-    buildCommand: npm run install-all && npm run build
+    repo: https://github.com/Satya-factcheck/Satya_backend.git
+    buildCommand: npm run build
     startCommand: npm start
     envVars:
+      - key: PORT
+        value: 4000
+      
       # MongoDB
       - key: MONGO_URI
         sync: false
