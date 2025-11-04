@@ -1,42 +1,96 @@
 import nodemailer from "nodemailer";
+import { google } from "googleapis";
 import { hashToken } from "../utils/auth.js";
 import EmailVerification from "../models/EmailVerification.js";
 
 const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465");
 const SMTP_USER = process.env.SMTP_USER || "";
 const SMTP_PASS = process.env.SMTP_PASS || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "noreply@satya.app";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+// Google OAuth2 credentials
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
+const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || "";
 
 // Format sender with name and email
 const formatSender = (email: string) => {
   return `Satya <${email}>`;
 };
 
-// Create transporter
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // Use SSL for port 465
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-});
+// Create OAuth2 client
+const oauth2Client = new google.auth.OAuth2(
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  "https://developers.google.com/oauthplayground" // Redirect URL for getting refresh token
+);
 
-// Verify SMTP connection on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ SMTP Connection failed:", error.message);
-    console.error("SMTP Config:", { host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT === 465 });
-  } else {
-    console.log("✅ SMTP Server is ready to send emails");
+// Set credentials if refresh token is available
+if (GOOGLE_REFRESH_TOKEN) {
+  oauth2Client.setCredentials({
+    refresh_token: GOOGLE_REFRESH_TOKEN,
+  });
+}
+
+// Create transporter with Gmail API
+const createTransporter = async () => {
+  if (GOOGLE_REFRESH_TOKEN) {
+    try {
+      // Use Gmail API via OAuth2
+      const accessToken = await oauth2Client.getAccessToken();
+      
+      return nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          type: "OAuth2",
+          user: SMTP_USER,
+          clientId: GOOGLE_CLIENT_ID,
+          clientSecret: GOOGLE_CLIENT_SECRET,
+          refreshToken: GOOGLE_REFRESH_TOKEN,
+          accessToken: accessToken.token || "",
+        },
+      });
+    } catch (error) {
+      console.error("❌ Failed to create OAuth2 transporter:", error);
+      console.log("⚠️  Falling back to SMTP authentication");
+    }
   }
-});
+  
+  // Fallback to regular SMTP if OAuth2 is not configured
+  console.log("Using SMTP authentication (fallback)");
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+  });
+};
+
+// Test email configuration on startup
+(async () => {
+  try {
+    const transporter = await createTransporter();
+    await transporter.verify();
+    console.log("✅ Email service is ready to send emails");
+    console.log(`📧 Using: ${GOOGLE_REFRESH_TOKEN ? 'Gmail API (OAuth2)' : 'SMTP'}`);
+  } catch (error) {
+    console.error("❌ Email service connection failed:", error);
+    console.error("Email Config:", { 
+      method: GOOGLE_REFRESH_TOKEN ? 'OAuth2' : 'SMTP',
+      host: SMTP_HOST, 
+      port: SMTP_PORT, 
+      user: SMTP_USER 
+    });
+  }
+})();
 
 /**
  * Send verification email
@@ -46,6 +100,7 @@ export const sendVerificationEmail = async (
   token: string,
   firstName?: string
 ): Promise<void> => {
+  const transporter = await createTransporter();
   const verificationUrl = `${FRONTEND_URL}/auth/verify?token=${token}`;
   const name = firstName || "User";
 
@@ -196,6 +251,7 @@ export const sendPasswordResetEmail = async (
   token: string,
   firstName?: string
 ): Promise<void> => {
+  const transporter = await createTransporter();
   const resetUrl = `${FRONTEND_URL}/auth/reset-password?token=${token}`;
   const name = firstName || "User";
 
