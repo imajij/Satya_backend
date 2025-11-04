@@ -18,11 +18,24 @@ const formatSender = (email: string) => {
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
-  secure: SMTP_PORT === 465,
+  secure: SMTP_PORT === 465, // Use SSL for port 465
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS,
   },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
+});
+
+// Verify SMTP connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP Connection failed:", error.message);
+    console.error("SMTP Config:", { host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT === 465 });
+  } else {
+    console.log("✅ SMTP Server is ready to send emails");
+  }
 });
 
 /**
@@ -128,9 +141,10 @@ export const sendVerificationEmail = async (
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Verification email sent to ${email}`);
+    console.log(`✅ Verification email sent successfully to ${email}`);
   } catch (error) {
-    console.error("Error sending verification email:", error);
+    console.error("❌ Error sending verification email:", error);
+    console.error("SMTP Config:", { host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT === 465 });
     throw new Error("Failed to send verification email");
   }
 };
