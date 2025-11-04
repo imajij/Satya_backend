@@ -232,7 +232,7 @@ router.get("/verify", async (req: Request, res: Response): Promise<void> => {
 
 /**
  * POST /api/auth/resend-verification
- * Resend verification email
+ * Resend verification email (authenticated endpoint - for logged in users)
  */
 router.post("/resend-verification", authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -257,6 +257,59 @@ router.post("/resend-verification", authenticate, async (req: AuthRequest, res: 
     res.json({ message: "Verification email sent" });
   } catch (error) {
     console.error("Resend verification error:", error);
+    res.status(500).json({ error: "Failed to send verification email" });
+  }
+});
+
+/**
+ * POST /api/auth/resend-verification-by-email
+ * Resend verification email using email address (public endpoint - no auth required)
+ */
+router.post("/resend-verification-by-email", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ error: "Email is required" });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      res.status(400).json({ error: "Invalid email format" });
+      return;
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+    
+    // Don't reveal if user exists or not for security
+    if (!user) {
+      res.json({ message: "If an account exists with this email, a verification link has been sent." });
+      return;
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      res.json({ message: "If an account exists with this email, a verification link has been sent." });
+      return;
+    }
+
+    // Only send email for users who registered with email/password
+    if (user.authProvider !== "email") {
+      res.json({ message: "If an account exists with this email, a verification link has been sent." });
+      return;
+    }
+
+    // Generate new verification token
+    const verificationToken = generateVerificationToken();
+    await createVerificationToken(user._id.toString(), verificationToken);
+
+    // Send verification email
+    await sendVerificationEmail(user.email, verificationToken, user.firstName || undefined);
+
+    res.json({ message: "If an account exists with this email, a verification link has been sent." });
+  } catch (error) {
+    console.error("Resend verification by email error:", error);
     res.status(500).json({ error: "Failed to send verification email" });
   }
 });

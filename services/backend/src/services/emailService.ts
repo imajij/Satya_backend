@@ -6,8 +6,13 @@ const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
 const SMTP_USER = process.env.SMTP_USER || "";
 const SMTP_PASS = process.env.SMTP_PASS || "";
-const EMAIL_FROM = process.env.EMAIL_FROM || process.env.SMTP_USER || "noreply@satya.app";
+const EMAIL_FROM = process.env.EMAIL_FROM || "noreply@satya.app";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+// Format sender with name and email
+const formatSender = (email: string) => {
+  return `Satya <${email}>`;
+};
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -32,7 +37,7 @@ export const sendVerificationEmail = async (
   const name = firstName || "User";
 
   const mailOptions = {
-    from: EMAIL_FROM,
+    from: formatSender(EMAIL_FROM),
     to: email,
     subject: "Verify Your Satya Account",
     html: `
@@ -181,7 +186,7 @@ export const sendPasswordResetEmail = async (
   const name = firstName || "User";
 
   const mailOptions = {
-    from: EMAIL_FROM,
+    from: formatSender(EMAIL_FROM),
     to: email,
     subject: "Reset Your Satya Password",
     html: `
